@@ -1,20 +1,25 @@
 const express = require("express")
-const CookieParser = require("cookie-parser")
+const cookieParser = require("cookie-parser")
 const cors = require("cors")
 
-app = express();
+const app = express()
 
-app.use(express.json());
-app.use(CookieParser())
-
+app.use(express.json())
+app.use(cookieParser())
 app.use(cors({
     origin: "http://localhost:5173",
     credentials: true
 }))
 
-// require all the routes over here
+/* require all the routes here */
 const authRouter = require("./routes/auth.routes")
+const interviewRouter = require("./routes/interview.routes")
 
-//use the routes over here
+
+/* using all the routes here */
 app.use("/api/auth", authRouter)
+app.use("/api/interview", interviewRouter)
+
+
+
 module.exports = app

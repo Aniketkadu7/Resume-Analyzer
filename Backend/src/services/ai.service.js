@@ -35,22 +35,134 @@ const interviewReportSchema = z.object({
 async function generateInterviewReport({ resume, selfDescription, jobDescription }) {
 
 
-    const prompt = `Generate an interview report for a candidate with the following details:
-                        Resume: ${resume}
-                        Self Description: ${selfDescription}
-                        Job Description: ${jobDescription}
-`
+const prompt = `
+You are an API that generates structured JSON.
+
+Your task is to analyze a candidate's resume, self description and job description and produce an interview report.
+
+=========================
+CANDIDATE RESUME
+=========================
+${resume}
+
+=========================
+SELF DESCRIPTION
+=========================
+${selfDescription}
+
+=========================
+JOB DESCRIPTION
+=========================
+${jobDescription}
+
+=========================
+CRITICAL INSTRUCTIONS
+=========================
+
+1. Return ONLY ONE JSON OBJECT.
+
+2. Do NOT write markdown.
+
+3. Do NOT wrap JSON inside \`\`\`.
+
+4. Do NOT explain anything.
+
+5. Do NOT omit ANY field.
+
+6. Every array must contain at least:
+   - technicalQuestions : 5 objects
+   - behavioralQuestions : 5 objects
+   - skillGaps : 3-5 objects
+   - preparationPlan : 7 objects
+
+7. Extract the job title from the Job Description.
+If the title is not explicitly mentioned, infer the most appropriate title.
+
+8. matchScore must be an integer between 0 and 100.
+
+9. severity can ONLY be:
+"low"
+"medium"
+"high"
+
+10. preparationPlan.day must start from 1 and increase sequentially.
+
+11. Every task array must contain at least 3 tasks.
+
+12. Never return null.
+
+13. Never return undefined.
+
+14. Never return empty arrays.
+
+15. Never return empty strings.
+
+16. Generate realistic interview questions based ONLY on the resume and job description.
+
+=========================
+EXPECTED JSON STRUCTURE
+=========================
+
+{
+  "title": "Software Engineer",
+
+  "matchScore": 87,
+
+  "technicalQuestions": [
+    {
+      "question": "...",
+      "intention": "...",
+      "answer": "..."
+    }
+  ],
+
+  "behavioralQuestions": [
+    {
+      "question": "...",
+      "intention": "...",
+      "answer": "..."
+    }
+  ],
+
+  "skillGaps": [
+    {
+      "skill": "...",
+      "severity": "medium"
+    }
+  ],
+
+  "preparationPlan": [
+    {
+      "day": 1,
+      "focus": "...",
+      "tasks": [
+        "...",
+        "...",
+        "..."
+      ]
+    }
+  ]
+}
+
+Return ONLY the JSON object.
+`;
+
 
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
-            responseSchema: zodToJsonSchema(interviewReportSchema),
         }
     })
 
-    return JSON.parse(response.text)
+
+    const json = JSON.parse(response.text);
+
+    // Validate AI output
+    const report = interviewReportSchema.parse(json);
+
+    return report;
 
 
 }
@@ -96,7 +208,7 @@ async function generateResumePdf({ resume, selfDescription, jobDescription }) {
                     `
 
     const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
+        model: "gemini-2.5-flash",
         contents: prompt,
         config: {
             responseMimeType: "application/json",
